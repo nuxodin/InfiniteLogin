@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>InfiniteLogin UI</title>
+    <script type=module async src="https://cdn.jsdelivr.net/gh/u2ui/u2@x.x.x/u2/auto.min.js"></script>
+    <style>
+        body { 
+            margin: 2rem auto;
+            max-width: 40rem;
+            padding: 0 1rem;
+        }
+        pre { 
+            background: var(--color-bg, #f5f5f5);
+            padding: 1rem;
+            border-radius: .25rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>InfiniteLogin UI Demo</h1>
+    <div id="login-container"></div>
+
+    <div id="profile" hidden>
+        <pre></pre>
+        <button onclick="logout()" class="infinite-login-btn">
+            <u2-ico icon="logout"></u2-ico>
+            Logout
+        </button>
+    </div>
+
+    <script src="../client/infinite-login.js"></script>
+    <script src="../client/ui.js"></script>
+    <script>
+        const config = {
+            github:    { clientId: 'your-github-client-id' },
+            google:    { clientId: 'your-google-client-id' },
+            worldId:   { clientId: 'your-worldid-client-id' },
+            brightId:  { clientId: 'your-brightid-client-id' },
+            twitter:   { clientId: 'your-twitter-client-id' },
+            apple:     { clientId: 'your-apple-client-id' },
+            microsoft: { clientId: 'your-microsoft-client-id' },
+            facebook:  { clientId: 'your-facebook-client-id' },
+            discord:   { clientId: 'your-discord-client-id' },
+            linkedin:  { clientId: 'your-linkedin-client-id' }
+        };
+
+        const login = new InfiniteLoginUI(config);
+        const profileEl = document.querySelector('#profile');
+        
+        login.mount('#login-container');
+
+        function showProfile(user) {
+            login.container.hidden = true;
+            profileEl.hidden = false;
+            profileEl.querySelector('pre').textContent = JSON.stringify(user, null, 2);
+        }
+
+        function logout() {
+            login.container.hidden = false;
+            profileEl.hidden = true;
+        }
+
+        login.addEventListener('code', async e => {
+            try {
+                const res = await fetch('/auth', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ code: e.detail })
+                });
+                
+                if (!res.ok) throw new Error('Auth failed');
+                showProfile(await res.json());
+            } catch (e) {
+                alert(e.message);
+            }
+        });
+
+        login.addEventListener('error', e => alert(e.message));
+    </script>
+</body>
+</html>

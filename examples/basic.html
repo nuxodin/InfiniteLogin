@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>InfiniteLogin</title>
+    <style>
+        body { margin: 2em auto; max-width: 40em; padding: 0 1em }
+        pre { background: #f5f5f5; padding: 1em }
+    </style>
+</head>
+<body>
+    <div id="login">
+        <button onclick="login.with('github')">GitHub</button>
+        <button onclick="login.with('google')">Google</button>
+        <button onclick="login.with('worldId')">World ID</button>
+        <button onclick="login.with('brightId')">BrightID</button>
+        <button onclick="login.with('twitter')">Twitter</button>
+        <button onclick="login.with('apple')">Apple</button>
+        <button onclick="login.with('microsoft')">Microsoft</button>
+        <button onclick="login.with('facebook')">Facebook</button>
+        <button onclick="login.with('discord')">Discord</button>
+        <button onclick="login.with('linkedin')">LinkedIn</button>
+    </div>
+
+    <div id="profile" hidden>
+        <pre></pre>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <script src="../client/base.js"></script>
+    <script>
+        const config = {
+            github:    { clientId: 'your-github-client-id' },
+            google:    { clientId: 'your-google-client-id' },
+            worldId:   { clientId: 'your-worldid-client-id' },
+            brightId:  { clientId: 'your-brightid-client-id' },
+            twitter:   { clientId: 'your-twitter-client-id' },
+            apple:     { clientId: 'your-apple-client-id' },
+            microsoft: { clientId: 'your-microsoft-client-id' },
+            facebook:  { clientId: 'your-facebook-client-id' },
+            discord:   { clientId: 'your-discord-client-id' },
+            linkedin:  { clientId: 'your-linkedin-client-id' }
+        };
+
+        // todo: generate buttons dynamically from config
+
+        const login = new InfiniteLogin(config);
+        const loginEl = document.querySelector('#login');
+        const profileEl = document.querySelector('#profile');
+
+        function showProfile(user) {
+            loginEl.hidden = true;
+            profileEl.hidden = false;
+            profileEl.querySelector('pre').textContent = 
+                JSON.stringify(user, null, 2);
+        }
+
+        function logout() {
+            loginEl.hidden = false;
+            profileEl.hidden = true;
+        }
+
+        login.addEventListener('code', async e => {
+            try {
+                const res = await fetch('/auth', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ code: e.detail })
+                });
+                
+                if (!res.ok) throw new Error('Auth failed');
+                showProfile(await res.json());
+            } catch (e) {
+                alert(e.message);
+            }
+        });
+
+        login.addEventListener('error', e => alert(e.message));
+    </script>
+</body>
+</html>
