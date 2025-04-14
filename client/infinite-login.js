@@ -1,48 +1,13 @@
-class InfiniteLogin extends EventTarget {
+import { PROVIDERS } from '../providers.js';
+
+export class InfiniteLogin extends EventTarget {
     constructor(config = {}) {
         super();
         this.config = config;
-        this.oauth = {
-            github: {
-                auth: {
-                    url: "https://github.com/login/oauth/authorize",
-                    scope: "user:email"
-                }
-            },
-            google: {
-                auth: {
-                    url: "https://accounts.google.com/o/oauth2/v2/auth",
-                    scope: "email profile",
-                    params: {
-                        response_type: "code",
-                        access_type: "offline"
-                    }
-                }
-            },
-            worldId: {
-                auth: {
-                    url: "https://id.worldcoin.org/authorize",
-                    scope: "openid",
-                    params: {
-                        response_type: "code"
-                    }
-                }
-            },
-            brightId: {
-                auth: {
-                    url: "https://app.brightid.org/auth",
-                    scope: "profile",
-                    params: {
-                        response_type: "code",
-                        context: "login"
-                    }
-                }
-            }
-        };
     }
 
     with(provider) {
-        const config = this.oauth[provider]?.auth;
+        const config = PROVIDERS[provider]?.auth;
         if (!config) {
             this.error(`Unknown provider: ${provider}`);
             return;
@@ -65,7 +30,7 @@ class InfiniteLogin extends EventTarget {
     }
 
     openPopup(url) {
-        const popup = window.open(url, "Login", [
+        const popup = globalThis.open(url, "Login", [
             "width=600",
             "height=600",
             `left=${screen.width/2 - 300}`,
@@ -77,7 +42,7 @@ class InfiniteLogin extends EventTarget {
             return;
         }
 
-        let timer = setInterval(() => {
+        const timer = setInterval(() => {
             try {
                 if (popup.closed) {
                     clearInterval(timer);
@@ -89,7 +54,9 @@ class InfiniteLogin extends EventTarget {
                     clearInterval(timer);
                     this.dispatchEvent(new CustomEvent("code", { detail: code }));
                 }
-            } catch {}
+            } catch {
+                // Ignoriere Cross-Origin Fehler
+            }
         }, 100);
 
         setTimeout(() => {

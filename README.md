@@ -1,8 +1,5 @@
 # InfiniteLogin
 
-Todo: übersetze ins Englische
-
-
 Minimalistische OAuth-Authentifizierung.
 
 ## Installation
@@ -15,54 +12,42 @@ deno cache deps.ts
 
 ### Server
 ```typescript
+import { serve } from "https://deno.land/std/http/server.ts";
+
 const auth = new InfiniteLogin({
   github: {
     clientId: "your-github-client-id",
     secret: "your-github-secret"
-  },
-  google: {
-    clientId: "your-google-client-id",
-    secret: "your-google-secret"
-  },
-  worldId: {
-    clientId: "your-worldid-client-id",
-    secret: "your-worldid-secret"
-  },
-  brightId: {
-    clientId: "your-brightid-client-id",
-    secret: "your-brightid-secret"
-  },
-  twitter: {
-    clientId: "your-twitter-client-id",
-    secret: "your-twitter-secret"
   }
-  // Weitere verfügbare Provider:
-  // - apple
-  // - microsoft
-  // - facebook
-  // - discord
 });
 
-// Optional: Client-Konfiguration abrufen
-const clientConfig = auth.clientConfig();
-// Returns: { github: { clientId: "..." }, google: { clientId: "..." }, ... }
-
-// Code validieren und User-Daten erhalten
-const user = await auth.authenticate("github", code);
+serve(async (req) => {
+  const url = new URL(req.url);
+  if (url.pathname === "/auth/config") {
+    return new Response(JSON.stringify(auth.clientConfig()), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  if (url.pathname === "/auth" && req.method === "POST") {
+    const { code } = await req.json();
+    const user = await auth.authenticate("github", code);
+    return new Response(JSON.stringify(user), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+});
 ```
 
 ### Client
+
+#### Basis Verwendung
 ```html
-<script src="client/infinite-login.js"></script>
-<script>
-// Konfiguration direkt übergeben
+<script type="module">
+import { InfiniteLogin } from './client/infinite-login.js';
+import { PROVIDERS } from './providers.js';
+
 const config = {
-  github: { clientId: "your-github-client-id" },
-  google: { clientId: "your-google-client-id" },
-  worldId: { clientId: "your-worldid-client-id" },
-  brightId: { clientId: "your-brightid-client-id" },
-  twitter: { clientId: "your-twitter-client-id" }
-  // Weitere Provider wie oben konfigurierbar
+  github: { clientId: "your-github-client-id" }
 };
 
 const login = new InfiniteLogin(config);
@@ -72,17 +57,21 @@ login.addEventListener('code', async e => {
   console.log(user);
 });
 
-// Verfügbare Provider:
-// - github
-// - google
-// - worldId
-// - brightId
-// - twitter
-// - apple
-// - microsoft
-// - facebook
-// - discord
-login.with('github'); 
+login.with('github');
+</script>
+```
+
+#### UI Komponente
+```html
+<script type="module">
+import { InfiniteLoginUI } from './client/ui.js';
+
+const config = {
+  github: { clientId: "your-github-client-id" }
+};
+
+const login = new InfiniteLoginUI(config);
+login.mount('#login-container');
 </script>
 ```
 
@@ -97,14 +86,41 @@ login.with('github');
 }
 ```
 
-## Provider Spezifische Scopes
+## Verfügbare Provider
+
+Alle Provider sind in `providers.js` konfiguriert:
+
+- GitHub (`github`)
+- Google (`google`)
+- Auth0 (`auth0`) - {tenant} wird durch deine Auth0-Domain ersetzt
+- Twitter (`twitter`) 
+- Apple (`apple`)
+- Microsoft (`microsoft`)
+- Facebook (`facebook`)
+- Discord (`discord`)
+- LinkedIn (`linkedin`)
+- GitLab (`gitlab`)
+- Bitbucket (`bitbucket`)
+- Slack (`slack`)
+- WorldID (`worldId`)
+- BrightID (`brightId`)
+
+### Provider Spezifische Scopes
 
 - GitHub: `user:email`
 - Google: `email profile`
 - WorldID: `openid`
 - BrightID: `profile`
 - Twitter: `users.read tweet.read`
-- Die anderen Provider verwenden ihre Standard-Scopes
+- Apple: `name email`
+- Microsoft: `user.read`
+- Facebook: `email public_profile`
+- Discord: `identify email`
+- LinkedIn: `r_liteprofile r_emailaddress`
+- GitLab: `read_user email`
+- Bitbucket: `account email`
+- Auth0: `openid profile email`
+- Slack: `users:read users:read.email`
 
 ## Lizenz
 MIT

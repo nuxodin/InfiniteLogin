@@ -1,5 +1,8 @@
-import { assertRejects } from "https://deno.land/std@0.215.0/assert/mod.ts";
+import { assertRejects } from "../deps.ts";
 import { InfiniteLogin } from "../mod.ts";
+import { PROVIDERS } from "../../providers.js";
+
+type Provider = keyof typeof PROVIDERS;
 
 Deno.test("InfiniteLogin", async t => {
   const auth = new InfiniteLogin({
@@ -10,7 +13,7 @@ Deno.test("InfiniteLogin", async t => {
   });
 
   await t.step("rejects unknown provider", () => {
-    assertRejects(() => auth.authenticate("invalid", "code"),
+    assertRejects(() => auth.authenticate("invalid" as Provider, "code"),
       Error, "Unknown provider: invalid");
   });
 

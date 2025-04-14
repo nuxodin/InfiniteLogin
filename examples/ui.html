@@ -28,36 +28,31 @@
         </button>
     </div>
 
-    <script src="../client/infinite-login.js"></script>
-    <script src="../client/ui.js"></script>
-    <script>
-        const config = {
-            github:    { clientId: 'your-github-client-id' },
-            google:    { clientId: 'your-google-client-id' },
-            worldId:   { clientId: 'your-worldid-client-id' },
-            brightId:  { clientId: 'your-brightid-client-id' },
-            twitter:   { clientId: 'your-twitter-client-id' },
-            apple:     { clientId: 'your-apple-client-id' },
-            microsoft: { clientId: 'your-microsoft-client-id' },
-            facebook:  { clientId: 'your-facebook-client-id' },
-            discord:   { clientId: 'your-discord-client-id' },
-            linkedin:  { clientId: 'your-linkedin-client-id' }
-        };
+    <script type="module">
+        import { InfiniteLoginUI } from '../client/ui.js';
+        import { PROVIDERS } from '../providers.js';
 
+        const config = {};
+        for (const [id, provider] of Object.entries(PROVIDERS)) {
+            config[id] = {
+                clientId: 'todo: client_id',
+            };
+        }
+        
         const login = new InfiniteLoginUI(config);
         const profileEl = document.querySelector('#profile');
         
         login.mount('#login-container');
 
+        window.logout = () => {
+            login.container.hidden = false;
+            profileEl.hidden = true;
+        };
+
         function showProfile(user) {
             login.container.hidden = true;
             profileEl.hidden = false;
             profileEl.querySelector('pre').textContent = JSON.stringify(user, null, 2);
-        }
-
-        function logout() {
-            login.container.hidden = false;
-            profileEl.hidden = true;
         }
 
         login.addEventListener('code', async e => {
